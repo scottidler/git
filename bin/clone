@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import re
+import imp
+import sys
+import argparse
+
+SCRIPT_PATH = os.path.dirname(__file__)
+
+sys.dont_write_bytecode = True
+from configparser import SafeConfigParser
+from pprint import pprint
+from subprocess import CalledProcessError
+
+class FailedDiscover(Exception):
+    def __init__(self, repospec, giturls):
+        message = ' '.join([giturl + repospec for giturl in giturls])
+        super(FailedDiscover, self).__init__(message)
+
+def load_config(filename):
+    filename = os.path.expanduser(filename)
+    parser = SafeConfigParser()
+    cfg = {}
+    if os.path.isfile(filename):
+        parser.read(filename)
+        for name, value in parser.items('clone'):
+            if '\n' in value:
+                value = value.strip().split('\n')
+            cfg[name] = value
+    return cfg
+
+CFG = {}
+CONFIGS = [
+    '~/.config/clone/clone.cfg',
+    os.path.join(SCRIPT_PATH, 'clone.cfg'),
+]
+for config in CONFIGS:
+    CFG.update(load_config(config))
+print('CFG =', CFG)
+gitpy = CFG.get('gitpy', os.path.join(SCRIPT_PATH, '../git.py'))
+git = imp.load_source('git', os.path.expanduser(gitpy))
+
+def decompose(giturl, repospec, verbose=False):
+    pattern = '((git|ssh|https?|rsync)://)(\w+@)?([\w\.]+)(:(\d+))?[:/]{1,2}'
+    regex = re.compile(pattern)
+    if giturl:
+        return giturl, repospec
+    match = regex.match(repospec)
+    if match:
+        giturl = match.group()
+        reponame = os.path.splitext(repospec[len(giturl):])[0]
+    else:
+        reponame = repospec
+    if verbose:
+        print('decompose: giturl={giturl} reponame={reponame}'.format(**locals()))
+    return giturl, reponame
+
+def discover(giturls, repospec, verbose=False):
+    if verbose:
+        print('repospec =', repospec)
+    for giturl in giturls:
+        if verbose:
+            print('giturl =', giturl)
+        repourl = os.path.join(giturl, repospec)
+        exitcode, stdout, stderr = git.ls_remote(repourl, verbose=verbose)
+        if 0 == exitcode:
+            return decompose(giturl, repospec)
+    raise FailedDiscover(repospec, giturls)
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--giturl',
+        metavar='URL',
+        help='the giturl to be used with git clone')
+    parser.add_argument(
+        '--clonepath',
+        metavar='PATH',
+        default=os.getcwd(),
+        help='path to store all cloned repos')
+    parser.add_argument(
+        '--mirrorpath',
+        metavar='PATH',
+        help='path to cached repos to support fast cloning')
+    parser.add_argument(
+        '--versioning',
+        action='store_true',
+        help='turn on versioning; checkout in reponame/commit rather than reponame')
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='turn on verbose output')
+    parser.add_argument(
+        'repospec',
+        help='repospec schema is giturl?reponame')
+    parser.add_argument(
+        'revision',
+        default='master',
+        nargs='?',
+        help='revision')
+
+    ns = parser.parse_args()
+    locals().update(ns.__dict__)
+    giturl, reponame = discover(CFG.get('giturls', [])+[''], repospec, verbose)
+    print(git.clone(giturl, reponame, revision, clonepath, mirrorpath, versioning))
