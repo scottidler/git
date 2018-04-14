@@ -34,11 +34,10 @@ def load_config(filename):
 CFG = {}
 CONFIGS = [
     '~/.config/clone/clone.cfg',
-    os.path.join(SCRIPT_PATH, 'clone.cfg'),
+    os.path.join(SCRIPT_PATH, '../cfg/clone.cfg'),
 ]
 for config in CONFIGS:
     CFG.update(load_config(config))
-print('CFG =', CFG)
 gitpy = CFG.get('gitpy', os.path.join(SCRIPT_PATH, '../git.py'))
 git = imp.load_source('git', os.path.expanduser(gitpy))
 
