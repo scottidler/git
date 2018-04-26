@@ -7,7 +7,7 @@ import sys
 
 from ruamel import yaml
 from pprint import pprint
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, CalledProcessError
 from contextlib import contextmanager
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
