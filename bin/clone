@@ -3,9 +3,9 @@
 
 import os
 import re
-import imp
 import sys
 import argparse
+import importlib
 
 SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -39,7 +39,7 @@ CONFIGS = [
 for config in CONFIGS:
     CFG.update(load_config(config))
 gitpy = CFG.get('gitpy', os.path.join(SCRIPT_PATH, '../git.py'))
-git = imp.load_source('git', os.path.expanduser(gitpy))
+git = importlib.machinery.SourceFileLoader('git', os.path.expanduser(gitpy)).load_module()
 
 def decompose(giturl, repospec, verbose=False):
     pattern = '((git|ssh|https?|rsync)://)(\w+@)?([\w\.]+)(:(\d+))?[:/]{1,2}'
