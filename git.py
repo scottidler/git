@@ -5,15 +5,13 @@ import os
 import re
 import sys
 
+sys.dont_write_bytecode = True
+
 from ruamel import yaml
 from pprint import pprint
 from subprocess import Popen, PIPE, CalledProcessError
 from contextlib import contextmanager
 from argparse import ArgumentParser, RawDescriptionHelpFormatter
-
-sys.dont_write_bytecode = True
-
-SCRIPTNAME = os.path.splitext(__file__)[0]
 
 def expand(path):
     if path:
