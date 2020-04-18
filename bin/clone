@@ -15,8 +15,8 @@ from pprint import pprint
 from subprocess import CalledProcessError
 
 class FailedDiscover(Exception):
-    def __init__(self, repospec, giturls):
-        message = ' '.join([giturl + repospec for giturl in giturls])
+    def __init__(self, repospec, remotes):
+        message = ' '.join([remote + repospec for remote in remotes])
         super(FailedDiscover, self).__init__(message)
 
 def load_config(filename):
@@ -29,6 +29,16 @@ def load_config(filename):
             if '\n' in value:
                 value = value.strip().split('\n')
             cfg[name] = value
+        orgs = {}
+        for section in parser.sections():
+            if section.startswith('org.'):
+                orgs[section[len('org.'):]] = {
+                    'urlsuffix': parser[section].get('urlsuffix', None),
+                    'username': parser[section].get('username', None),
+                    'useremail': parser[section].get('useremail', None),
+                }
+        if orgs:
+            cfg['orgs'] = orgs
     return cfg
 
 CFG = {}
@@ -41,39 +51,48 @@ for config in CONFIGS:
 gitpy = CFG.get('gitpy', os.path.join(SCRIPT_PATH, '../git.py'))
 git = importlib.machinery.SourceFileLoader('git', os.path.expanduser(gitpy)).load_module()
 
-def decompose(giturl, repospec, verbose=False):
+def decompose(remote, repospec, verbose=False):
     pattern = '((git|ssh|https?|rsync)://)(\w+@)?([\w\.]+)(:(\d+))?[:/]{1,2}'
     regex = re.compile(pattern)
-    if giturl:
-        return giturl, repospec
+    if remote:
+        return remote, repospec
     match = regex.match(repospec)
     if match:
-        giturl = match.group()
-        reponame = os.path.splitext(repospec[len(giturl):])[0]
+        remote = match.group()
+        reponame = os.path.splitext(repospec[len(remote):])[0]
     else:
         reponame = repospec
     if verbose:
-        print('decompose: giturl={giturl} reponame={reponame}'.format(**locals()))
-    return giturl, reponame
+        print(f'decompose: remote={remote} reponame={reponame}')
+    return remote, reponame
 
-def discover(giturls, repospec, verbose=False):
+def discover(remotes, repospec, verbose=False):
     if verbose:
         print('repospec =', repospec)
-    for giturl in giturls:
+    for remote in remotes:
         if verbose:
-            print('giturl =', giturl)
-        repourl = os.path.join(giturl, repospec)
+            print('remote =', remote)
+        repourl = os.path.join(remote, repospec)
         exitcode, stdout, stderr = git.ls_remote(repourl, verbose=verbose)
         if 0 == exitcode:
-            return decompose(giturl, repospec)
-    raise FailedDiscover(repospec, giturls)
+            return decompose(remote, repospec)
+    raise FailedDiscover(repospec, remotes)
+
+def divine(reponame):
+    project = os.path.dirname(reponame)
+    default = CFG['orgs'].get('default', {})
+    org = CFG['orgs'].get(project, {})
+    urlsuffix = org.get('urlsuffix', default.get('urlsuffix', None))
+    username = org.get('username', default.get('username', None))
+    useremail = org.get('useremail', default.get('useremail', None))
+    return urlsuffix, username, useremail
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '--giturl',
+        '--remote',
         metavar='URL',
-        help='the giturl to be used with git clone')
+        help='the git url to be used with git clone')
     parser.add_argument(
         '--clonepath',
         metavar='PATH',
@@ -93,7 +112,7 @@ if __name__ == '__main__':
         help='turn on verbose output')
     parser.add_argument(
         'repospec',
-        help='repospec schema is giturl?reponame')
+        help='repospec schema is remote?reponame')
     parser.add_argument(
         'revision',
         default='master',
@@ -102,5 +121,6 @@ if __name__ == '__main__':
 
     ns = parser.parse_args()
     locals().update(ns.__dict__)
-    giturl, reponame = discover(CFG.get('giturls', [])+[''], repospec, verbose)
-    print(git.clone(giturl, reponame, revision, clonepath, mirrorpath, versioning))
+    remote, reponame = discover(CFG.get('remotes', [])+[''], repospec, verbose)
+    urlsuffix, username, useremail = divine(reponame)
+    print(git.clone(f'{remote}-{urlsuffix}', reponame, revision, clonepath, mirrorpath, username, useremail, versioning))

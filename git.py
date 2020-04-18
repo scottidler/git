@@ -56,7 +56,7 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
         if stderr:
             print(stderr)
     if throw and exitcode:
-        message = 'cmd={cmd}; stdout={stdout}; stderr={stderr}'.format(**locals())
+        message = f'cmd={cmd}; stdout={stdout}; stderr={stderr}'
         raise CalledProcessError(exitcode, message)
     return exitcode, stdout, stderr
 
@@ -74,20 +74,23 @@ def create_r2c_c2r(verbose=False):
         c2r[commit] = refname
     return r2c, c2r
 
-def clone(giturl, reponame, revision, clonepath, mirrorpath, versioning=False):
+def clone(remote, reponame, revision, clonepath, mirrorpath, username=None, useremail=None, versioning=False):
     clonepath = expand(clonepath)
     mirrorpath = expand(mirrorpath)
     mirror = ''
     if mirrorpath:
-        mirror = '--reference {mirrorpath}/{reponame}.git'.format(**locals())
+        mirror = f'--reference {mirrorpath}/{reponame}.git'
     path = os.path.join(clonepath, reponame)
     repopath = reponame
     if versioning:
         repopath = os.path.join(repopath, revision)
     with cd(clonepath, mkdir=True):
         if not os.path.isdir(repopath):
-            call('git clone {mirror} {giturl}/{reponame} {repopath}'.format(**locals()))
+            call(f'git clone {mirror} {remote}/{reponame} {repopath}')
         with cd(repopath):
             call('git clean -xfd')
             call('git checkout '+revision)
+            if username and useremail:
+                call(f'git config user.name "{username}"')
+                call(f'git config user.email "{useremail}"')
     return os.path.join(clonepath, repopath)
