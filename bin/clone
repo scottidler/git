@@ -7,49 +7,49 @@ import sys
 import argparse
 import importlib
 
-SCRIPT_PATH = os.path.dirname(os.path.realpath(__file__))
-
 sys.dont_write_bytecode = True
+
 from configparser import ConfigParser
 from pprint import pprint
 from subprocess import CalledProcessError
+
+DIR = os.path.abspath(os.path.dirname(__file__) + "/..")
+CWD = os.path.abspath(os.getcwd())
+REL = os.path.relpath(DIR, CWD)
+GIT_PY = f'{DIR}/git.py'
+GIT_PY2 = '/home/sidler/.../repos/scottidler/git/git.py'
+git = importlib.machinery.SourceFileLoader('git', GIT_PY).load_module()
+CONFIGS = [
+    '~/.config/clone/clone.cfg',
+    f'{DIR}/cfg/clone.cfg',
+]
 
 class FailedDiscover(Exception):
     def __init__(self, repospec, remotes):
         message = ' '.join([remote + repospec for remote in remotes])
         super(FailedDiscover, self).__init__(message)
 
-def load_config(filename):
-    filename = os.path.expanduser(filename)
-    parser = ConfigParser()
-    cfg = {}
-    if os.path.isfile(filename):
-        parser.read(filename)
-        for name, value in parser.items('clone'):
-            if '\n' in value:
-                value = value.strip().split('\n')
-            cfg[name] = value
-        orgs = {}
-        for section in parser.sections():
-            if section.startswith('org.'):
-                orgs[section[len('org.'):]] = {
-                    'urlsuffix': parser[section].get('urlsuffix', None),
-                    'username': parser[section].get('username', None),
-                    'useremail': parser[section].get('useremail', None),
-                }
-        if orgs:
+def load_config(filenames):
+    for filename in filenames:
+        filename = os.path.abspath(os.path.expanduser(filename))
+        parser = ConfigParser()
+        cfg = {}
+        if os.path.isfile(filename):
+            parser.read(filename)
+            for name, value in parser.items('clone'):
+                if '\n' in value:
+                    value = value.strip().split('\n')
+                cfg[name] = value
+            orgs = {}
+            for section in parser.sections():
+                if section.startswith('org.'):
+                    orgs[section[len('org.'):]] = {
+                        'urlsuffix': parser[section].get('urlsuffix', None),
+                        'username': parser[section].get('username', None),
+                        'useremail': parser[section].get('useremail', None),
+                    }
             cfg['orgs'] = orgs
-    return cfg
-
-CFG = {}
-CONFIGS = [
-    '~/.config/clone/clone.cfg',
-    os.path.join(SCRIPT_PATH, '../cfg/clone.cfg'),
-]
-for config in CONFIGS:
-    CFG.update(load_config(config))
-gitpy = CFG.get('gitpy', os.path.join(SCRIPT_PATH, '../git.py'))
-git = importlib.machinery.SourceFileLoader('git', os.path.expanduser(gitpy)).load_module()
+            return cfg
 
 def decompose(remote, repospec, verbose=False):
     pattern = '((git|ssh|https?|rsync)://)(\w+@)?([\w\.]+)(:(\d+))?[:/]{1,2}'
@@ -78,10 +78,10 @@ def discover(remotes, repospec, verbose=False):
             return decompose(remote, repospec)
     raise FailedDiscover(repospec, remotes)
 
-def divine(reponame):
+def divine(reponame, cfg):
     project = os.path.dirname(reponame)
-    default = CFG['orgs'].get('default', {})
-    org = CFG['orgs'].get(project, {})
+    default = cfg['orgs'].get('default', {})
+    org = cfg['orgs'].get(project, {})
     urlsuffix = org.get('urlsuffix', default.get('urlsuffix', None))
     username = org.get('username', default.get('username', None))
     useremail = org.get('useremail', default.get('useremail', None))
@@ -89,6 +89,12 @@ def divine(reponame):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--configs',
+        metavar='FILE',
+        default=CONFIGS,
+        nargs='+',
+        help='default="%(default)s"; list of configs to try; loads first found')
     parser.add_argument(
         '--remote',
         metavar='URL',
@@ -121,6 +127,18 @@ if __name__ == '__main__':
 
     ns = parser.parse_args()
     locals().update(ns.__dict__)
-    remote, reponame = discover(CFG.get('remotes', [])+[''], repospec, verbose)
-    urlsuffix, username, useremail = divine(reponame)
-    print(git.clone(f'{remote}-{urlsuffix}', reponame, revision, clonepath, mirrorpath, username, useremail, versioning))
+    cfg = load_config(configs)
+    remote, reponame = discover(cfg.get('remotes', [])+[''], repospec, verbose)
+    urlsuffix, username, useremail = divine(reponame, cfg)
+    if urlsuffix:
+        remote += '-'+ urlsuffix
+    print(
+        git.clone(
+            remote,
+            reponame,
+            revision,
+            clonepath,
+            mirrorpath,
+            username,
+            useremail,
+            versioning))
