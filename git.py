@@ -61,17 +61,6 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
 def ls_remote(repourl, verbose=False):
     return call('git ls-remote ' + repourl, verbose=verbose)
 
-def create_r2c_c2r(verbose=False):
-    r2c = {}
-    c2r = {}
-    for line in lsremote.split('\n'):
-        if verbose:
-            print('line: ', line)
-        commit, refname = line.split('\t')
-        r2c[refname] = commit
-        c2r[commit] = refname
-    return r2c, c2r
-
 def clone(remote, reponame, revision, clonepath, mirrorpath, username=None, useremail=None, versioning=False):
     clonepath = expand(clonepath)
     mirrorpath = expand(mirrorpath)
