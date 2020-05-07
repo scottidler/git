@@ -19,15 +19,12 @@ def eprint(*args, **kwargs):
 REAL_FILE = os.path.abspath(__file__)
 REAL_NAME = os.path.basename(REAL_FILE)
 REAL_PATH = os.path.dirname(REAL_FILE)
-eprint('REAL_PATH', REAL_PATH)
 if os.path.islink(__file__):
     LINK_FILE = REAL_FILE; REAL_FILE = os.path.abspath(os.readlink(__file__))
     LINK_NAME = REAL_NAME; REAL_NAME = os.path.basename(REAL_FILE)
     LINK_PATH = REAL_PATH; REAL_PATH = os.path.dirname(REAL_FILE)
-    eprint('LINK_PATH', LINK_PATH)
 
 GIT_PY = f'{REAL_PATH}/../git.py'
-eprint('GIT_PY', GIT_PY)
 
 git = importlib.machinery.SourceFileLoader('git', GIT_PY).load_module()
 CONFIGS = [
