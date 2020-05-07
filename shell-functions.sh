@@ -1,4 +1,4 @@
-# vim: filetype=sh
+#!/usr/bin/zsh
 
 if [ -n "$DEBUG" ]; then
     PS4=':${LINENO}+'
@@ -11,6 +11,11 @@ function clone() {
     else
         cd $(~/bin/clone $1)
     fi
+}
+
+function rm-tag() {
+    TAG="$1"
+    git tag -d $TAG; git push origin :$TAG
 }
 
 function github-url() {
