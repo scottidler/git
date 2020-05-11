@@ -13,14 +13,14 @@ def get_org_repos(organization):
     reponames = []
     page = 1
     github = 'https://api.github.com/orgs'
-    url = '{github}/{organization}/repos?page={page}'.format(**locals())
+    url = f'{github}/{organization}/repos?page={page}'
     repos = requests.get(url).json()
     while repos:
         for repo in repos:
             full_name = repo['full_name']
             reponames += [repo['full_name']]
         page += 1
-        url = '{github}/{organization}/repos?page={page}'.format(**locals())
+        url = f'{github}/{organization}/repos?page={page}'
         repos = requests.get(url).json()
     return reponames
 
