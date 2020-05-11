@@ -17,7 +17,6 @@ def get_org_repos(organization):
     repos = requests.get(url).json()
     while repos:
         for repo in repos:
-            full_name = repo['full_name']
             reponames += [repo['full_name']]
         page += 1
         url = f'{github}/{organization}/repos?page={page}'
