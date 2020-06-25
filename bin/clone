@@ -129,7 +129,7 @@ if __name__ == '__main__':
         help='repospec schema is remote?reponame')
     parser.add_argument(
         'revision',
-        default='master',
+        default='HEAD',
         nargs='?',
         help='revision')
 
