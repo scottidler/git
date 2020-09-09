@@ -59,31 +59,23 @@ def load_config(filenames):
             cfg['orgs'] = orgs
             return cfg
 
-def decompose(remote, repospec, verbose=False):
+def discover(repospec, remotes=None, verbose=False):
     pattern = '((git|ssh|https?|rsync)://)(\w+@)?([\w\.]+)(:(\d+))?[:/]{1,2}'
     regex = re.compile(pattern)
-    if remote:
-        return remote, repospec
     match = regex.match(repospec)
     if match:
         remote = match.group()
         reponame = os.path.splitext(repospec[len(remote):])[0]
-    else:
-        reponame = repospec
-    if verbose:
-        print(f'decompose: remote={remote} reponame={reponame}')
-    return remote, reponame
-
-def discover(remotes, repospec, verbose=False):
-    if verbose:
-        print('repospec =', repospec)
+        return remote, reponame
     for remote in remotes:
         if verbose:
-            print('remote =', remote)
+            print(f'remote = {remote}')
         repourl = os.path.join(remote, repospec)
-        exitcode, stdout, stderr = git.ls_remote(repourl, verbose=verbose)
+        if verbose:
+            print(f'repourl = {repourl}')
+        exitcode, stdout, stderr = git.ls_remote(repourl, throw=False, verbose=verbose)
         if 0 == exitcode:
-            return decompose(remote, repospec)
+            return remote, repospec
     raise FailedDiscover(repospec, remotes)
 
 def divine(reponame, cfg):
@@ -136,10 +128,16 @@ if __name__ == '__main__':
     ns = parser.parse_args()
     locals().update(ns.__dict__)
     cfg = load_config(configs)
-    remote, reponame = discover(cfg.get('remotes', [])+[''], repospec, verbose)
+    remotes = cfg.get('remotes', [])
+    remote, reponame = discover(repospec, remotes, verbose)
     urlsuffix, username, useremail = divine(reponame, cfg)
     if urlsuffix:
-        remote += '-'+ urlsuffix
+        if not remote.startswith('https://'):
+            if remote.endswith('/'):
+                remote = remote[:-1]
+            remote += '-'+ urlsuffix
+    if verbose:
+        print(f'remote = {remote}, reponame = {reponame}')
     print(
         git.clone(
             remote,

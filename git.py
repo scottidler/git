@@ -58,8 +58,8 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
         raise CalledProcessError(exitcode, message)
     return exitcode, stdout, stderr
 
-def ls_remote(repourl, verbose=False):
-    return call('git ls-remote ' + repourl, verbose=verbose)
+def ls_remote(repourl, throw=True, verbose=False):
+    return call('git ls-remote ' + repourl, throw=throw, verbose=verbose)
 
 def clone(remote, reponame, revision, clonepath, mirrorpath, username=None, useremail=None, versioning=False):
     clonepath = expand(clonepath)
