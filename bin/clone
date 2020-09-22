@@ -52,7 +52,6 @@ def load_config(filenames):
             for section in parser.sections():
                 if section.startswith('org.'):
                     orgs[section[len('org.'):]] = {
-                        'urlsuffix': parser[section].get('urlsuffix', None),
                         'username': parser[section].get('username', None),
                         'useremail': parser[section].get('useremail', None),
                     }
@@ -64,7 +63,7 @@ def discover(repospec, remotes=None, verbose=False):
     regex = re.compile(pattern)
     match = regex.match(repospec)
     if match:
-        remote = match.group()
+        remote = match.group(0)
         reponame = os.path.splitext(repospec[len(remote):])[0]
         return remote, reponame
     for remote in remotes:
@@ -82,10 +81,9 @@ def divine(reponame, cfg):
     project = os.path.dirname(reponame)
     default = cfg['orgs'].get('default', {})
     org = cfg['orgs'].get(project, {})
-    urlsuffix = org.get('urlsuffix', default.get('urlsuffix', None))
     username = org.get('username', default.get('username', None))
     useremail = org.get('useremail', default.get('useremail', None))
-    return urlsuffix, username, useremail
+    return username, useremail
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -130,12 +128,7 @@ if __name__ == '__main__':
     cfg = load_config(configs)
     remotes = cfg.get('remotes', [])
     remote, reponame = discover(repospec, remotes, verbose)
-    urlsuffix, username, useremail = divine(reponame, cfg)
-    if urlsuffix:
-        if not remote.startswith('https://'):
-            if remote.endswith('/'):
-                remote = remote[:-1]
-            remote += '-'+ urlsuffix
+    username, useremail = divine(reponame, cfg)
     if verbose:
         print(f'remote = {remote}, reponame = {reponame}')
     print(
