@@ -61,7 +61,16 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
 def ls_remote(repourl, throw=True, verbose=False):
     return call('git ls-remote ' + repourl, throw=throw, verbose=verbose)
 
-def clone(remote, reponame, revision, clonepath, mirrorpath, username=None, useremail=None, versioning=False):
+def clone(
+        remote,
+        reponame,
+        revision,
+        clonepath,
+        mirrorpath,
+        name=None,
+        email=None,
+        signingkey=None,
+        versioning=False):
     clonepath = expand(clonepath)
     mirrorpath = expand(mirrorpath)
     mirror = ''
@@ -78,7 +87,9 @@ def clone(remote, reponame, revision, clonepath, mirrorpath, username=None, user
         with cd(repopath):
             call('git clean -xfd')
             call('git checkout '+revision)
-            if username and useremail:
-                call(f'git config user.name "{username}"')
-                call(f'git config user.email "{useremail}"')
+            if name and email:
+                call(f'git config user.name "{name}"')
+                call(f'git config user.email "{email}"')
+            if signingkey:
+                call(f'git config user.signingkey "{signingkey}"')
     return os.path.join(clonepath, repopath)
