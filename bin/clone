@@ -52,8 +52,9 @@ def load_config(filenames):
             for section in parser.sections():
                 if section.startswith('org.'):
                     orgs[section[len('org.'):]] = {
-                        'username': parser[section].get('username', None),
-                        'useremail': parser[section].get('useremail', None),
+                        'name': parser[section].get('name', None),
+                        'email': parser[section].get('email', None),
+                        'signingkey': parser[section].get('signingkey', None)
                     }
             cfg['orgs'] = orgs
             return cfg
@@ -81,9 +82,10 @@ def divine(reponame, cfg):
     project = os.path.dirname(reponame)
     default = cfg['orgs'].get('default', {})
     org = cfg['orgs'].get(project, {})
-    username = org.get('username', default.get('username', None))
-    useremail = org.get('useremail', default.get('useremail', None))
-    return username, useremail
+    name = org.get('name', default.get('name', None))
+    email = org.get('email', default.get('email', None))
+    signingkey = org.get('signingkey', default.get('signingkey', None))
+    return name, email, signingkey
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -128,7 +130,7 @@ if __name__ == '__main__':
     cfg = load_config(configs)
     remotes = cfg.get('remotes', [])
     remote, reponame = discover(repospec, remotes, verbose)
-    username, useremail = divine(reponame, cfg)
+    name, email, signingkey = divine(reponame, cfg)
     if verbose:
         print(f'remote = {remote}, reponame = {reponame}')
     print(
@@ -138,6 +140,7 @@ if __name__ == '__main__':
             revision,
             clonepath,
             mirrorpath,
-            username,
-            useremail,
+            name,
+            email,
+            signingkey,
             versioning))
