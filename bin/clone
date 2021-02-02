@@ -9,6 +9,7 @@ import importlib
 
 sys.dont_write_bytecode = True
 
+from importlib.machinery import SourceFileLoader
 from configparser import ConfigParser
 from pprint import pprint
 from subprocess import CalledProcessError
@@ -24,13 +25,12 @@ if os.path.islink(__file__):
     LINK_NAME = REAL_NAME; REAL_NAME = os.path.basename(REAL_FILE)
     LINK_PATH = REAL_PATH; REAL_PATH = os.path.dirname(REAL_FILE)
 
-GIT_PY = f'{REAL_PATH}/../git.py'
-
-git = importlib.machinery.SourceFileLoader('git', GIT_PY).load_module()
 CONFIGS = [
     '~/.config/clone/clone.cfg',
     f'{REAL_PATH}/../cfg/clone.cfg',
 ]
+GIT_PY = f'{REAL_PATH}/../git.py'
+git = SourceFileLoader('git', GIT_PY).load_module()
 
 class FailedDiscover(Exception):
     def __init__(self, repospec, remotes):
