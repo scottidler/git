@@ -74,7 +74,8 @@ if __name__ == '__main__':
     )
     parser.add_argument(
         'organization',
-        help='supply the github organization')
+        help='supply the github organization',
+    )
 
     ns = parser.parse_args()
     reponames = []
