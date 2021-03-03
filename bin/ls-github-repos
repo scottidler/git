@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import re
+import sys
+import requests
+sys.dont_write_bytecode = True
+
+from argparse import ArgumentParser
+
+REPO_TYPES = [
+    'orgs',
+    'users',
+]
+
+class GithubError(Exception):
+    def __init__(self, message, documentation_url):
+        msg = f'GithubError: message="{message}" documentation_url="{documentation_url}"'
+        super().__init__(msg)
+
+def get_token(token_path, organization):
+    token_file = os.path.expanduser(os.path.join(token_path, organization))
+    try:
+        return open(token_file).read().strip()
+    except Exception as ex:
+        return None
+
+def query(url, token, **params):
+    headers = {}
+    if token:
+        headers = {
+            'Authorization': 'token ' + token,
+        }
+    results = requests.get(url, headers=headers, params=params).json()
+    if isinstance(results, dict):
+        raise GithubError(**results)
+    return results
+
+def get_github_repos(token_path, repo_type, organization):
+    reponames = []
+    token = get_token(token_path, organization)
+    page = 1
+    github = f'https://api.github.com/{repo_type}'
+    url = f'{github}/{organization}/repos'
+    repos = query(url, token, page=page)
+    while repos:
+        for repo in repos:
+            reponames += [repo['full_name']]
+        page += 1
+        repos = query(url, token, page=page)
+    return reponames
+
+def print_github_repos(reponames):
+    for reponame in reponames:
+        print('https://github.com/' + reponame)
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument(
+        '-p', '--token-path',
+        metavar='PATH',
+        default='~/.config/github/tokens',
+        help='default="%(default)s"',
+    )
+    parser.add_argument(
+        '-t', '--repo-type',
+        metavar='REPO-TYPE',
+        dest='repo_types',
+        default=REPO_TYPES,
+        choices=REPO_TYPES,
+        nargs='+',
+        help='default=%(default)s; choices=%(default)s',
+    )
+    parser.add_argument(
+        'organization',
+        help='supply the github organization')
+
+    ns = parser.parse_args()
+    reponames = []
+    for repo_type in ns.repo_types:
+        try:
+            reponames += get_github_repos(ns.token_path, repo_type, ns.organization)
+        except GithubError as ge:
+            continue
+    print_github_repos(reponames)
+
