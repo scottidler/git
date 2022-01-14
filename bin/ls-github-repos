@@ -46,7 +46,8 @@ def get_github_repos(token_path, repo_type, organization):
     repos = query(url, token, page=page)
     while repos:
         for repo in repos:
-            reponames += [repo['full_name']]
+            reponame = repo['full_name']
+            reponames += [reponame]
         page += 1
         repos = query(url, token, page=page)
     return reponames
@@ -84,5 +85,5 @@ if __name__ == '__main__':
             reponames += get_github_repos(ns.token_path, repo_type, ns.organization)
         except GithubError as ge:
             continue
-    print_github_repos(reponames)
+    print_github_repos(sorted(list(set(reponames))))
 
