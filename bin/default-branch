@@ -25,5 +25,4 @@ if [ -n "$USERNAME" ]; then
 
 fi
 
-DEFAULT=$(git ls-remote --symref $URL HEAD | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}')
-echo "$REPONAME $DEFAULT"
+git ls-remote --symref $URL HEAD | awk '/^ref:/ {sub(/refs\/heads\//, "", $2); print $2}'
