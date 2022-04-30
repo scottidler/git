@@ -37,7 +37,7 @@ def query(url, token, **params):
         raise GithubError(**results)
     return results
 
-def get_github_repos(token_path, repo_type, organization):
+def get_github_repos(token_path, repo_type, organization, archived):
     reponames = []
     token = get_token(token_path, organization)
     page = 1
@@ -46,11 +46,12 @@ def get_github_repos(token_path, repo_type, organization):
     repos = query(url, token, page=page)
     while repos:
         for repo in repos:
-            reponame = repo['full_name']
-            reponames += [reponame]
+            if archived or not repo['archived']:
+                reponame = repo['full_name']
+                reponames += [reponame]
         page += 1
         repos = query(url, token, page=page)
-    return reponames
+    return sorted(reponames)
 
 def print_github_repos(reponames):
     for reponame in reponames:
@@ -74,6 +75,10 @@ if __name__ == '__main__':
         help='default=%(default)s; choices=%(default)s',
     )
     parser.add_argument(
+        '-a', '--archived',
+        action='store_true',
+        help='default=%(default)s; toggle including archived repos as well')
+    parser.add_argument(
         'organization',
         help='supply the github organization',
     )
@@ -82,7 +87,7 @@ if __name__ == '__main__':
     reponames = []
     for repo_type in ns.repo_types:
         try:
-            reponames += get_github_repos(ns.token_path, repo_type, ns.organization)
+            reponames += get_github_repos(ns.token_path, repo_type, ns.organization, ns.archived)
         except GithubError as ge:
             continue
     print_github_repos(sorted(list(set(reponames))))
