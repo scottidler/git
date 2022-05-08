@@ -1,0 +1,27 @@
+#!/bin/bash
+
+if [ -n "$DEBUG" ]; then
+    PS4=':${LINENO}+'
+    set -x
+fi
+
+REAL_FILE="$0"
+REAL_NAME="$(basename "$REAL_FILE")"
+REAL_PATH="$(dirname "$REAL_FILE")"
+if [ -L "$0" ]; then
+    LINK_FILE=$REAL_FILE; REAL_FILE="$(readlink "$0")"
+    LINK_NAME=$REAL_NAME; REAL_NAME="$(basename "$REAL_FILE")"
+    LINK_PATH=$REAL_PATH; REAL_PATH="$(dirname "$REAL_FILE")"
+fi
+if [ -n "$VERBOSE" ]; then
+    echo "REAL_FILE=$REAL_FILE"
+    echo "REAL_NAME=$REAL_NAME"
+    echo "REAL_PATH=$REAL_PATH"
+    if [ -L "$0" ]; then
+        echo "LINK_FILE=$LINK_FILE"
+        echo "LINK_NAME=$LINK_NAME"
+        echo "LINK_PATH=$LINK_PATH"
+    fi
+fi
+
+git config --get remote.origin.url | sed -E 's;^(git|ssh|https)://([A-Za-z0-9._-]+@)?([A-Za-z0-9._-]+/);;'
