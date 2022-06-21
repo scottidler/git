@@ -93,6 +93,9 @@ def git(args, strip=True, **kwargs):
     except CalledProcessError as ex:
         raise ex
 
+def printf(format, *args):
+    sys.stdout.write(format % args)
+
 def utc_offset():
     utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
     return timedelta(seconds=-utc_offset_sec)
@@ -117,18 +120,30 @@ def to_span(string):
         return (None, to_timedelta(items[0]))
     raise ToSpanError(string)
 
-def test_ref(ref, since, until):
+def test_ref(ref, show_date, show_author, since, until):
     now = datetime.now().replace(microsecond=0, tzinfo=timezone(offset=utc_offset()))
     since = now - since
     until = now - until
-    iso = git(f'show -q --format="%cI" {ref}')
+    name, iso = git(f'show -q --format="%an;%cI" {ref}').split(';')
     date = datetime.fromisoformat(iso)
     if since and since < date:
         if until and until > date:
-            print(date, ref)
+            if show_date:
+                printf('%s ', date)
+            if show_author:
+                printf('%s ', name)
+            print(ref)
 
 def main(args):
     parser = ArgumentParser()
+    parser.add_argument(
+        '-d', '--show-date',
+        action='store_true',
+        help='default="%(default)s"; toggle adding the date to the output')
+    parser.add_argument(
+        '-a', '--show-author',
+        action='store_true',
+        help='default="%(default)s"; toggle adding the author to the output')
     parser.add_argument(
         '-s', '--span',
         default=to_span('6m'),
@@ -139,7 +154,7 @@ def main(args):
         help='required; ref to check')
 
     ns = parser.parse_args()
-    test_ref(ns.ref, *ns.span)
+    test_ref(ns.ref, ns.show_date, ns.show_author, *ns.span)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
