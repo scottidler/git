@@ -1,0 +1,146 @@
+#!/usr/bin/env python3
+
+import os
+import re
+import sys
+sys.dont_write_bytecode = True
+
+DIR = os.path.abspath(os.path.dirname(__file__))
+CWD = os.path.abspath(os.getcwd())
+REL = os.path.relpath(DIR, CWD)
+
+REAL_FILE = os.path.abspath(__file__)
+REAL_NAME = os.path.basename(REAL_FILE)
+REAL_PATH = os.path.dirname(REAL_FILE)
+if os.path.islink(__file__):
+    LINK_FILE = REAL_FILE; REAL_FILE = os.path.abspath(os.readlink(__file__))
+    LINK_NAME = REAL_NAME; REAL_NAME = os.path.basename(REAL_FILE)
+    LINK_PATH = REAL_PATH; REAL_PATH = os.path.dirname(REAL_FILE)
+
+import time, contextlib
+from dateutil.relativedelta import *
+from argparse import ArgumentParser
+from datetime import datetime, timedelta, timezone
+from subprocess import Popen, CalledProcessError, PIPE  # nosec
+
+from leatherman.dbg import dbg
+from leatherman.git import call
+
+class ToSpanError(Exception):
+    def __init__(self, string):
+        msg = f'error: to span on string={string}'
+        super().__init__(msg)
+
+class NotGitRepoError(Exception):
+    def __init__(self, cwd=os.getcwd()):
+        msg = f'not a git repository error cwd={cwd}'
+        super().__init__(msg)
+
+
+class GitCommandNotFoundError(Exception):
+    def __init__(self):
+        msg = 'git: command not found'
+        super().__init__(msg)
+
+@contextlib.contextmanager
+def cd(path):
+    prev = os.getcwd()
+    os.chdir(path)
+    try:
+        yield
+    finally:
+        os.chdir(prev)
+
+def call(
+    cmd,
+    stdout=PIPE,
+    stderr=PIPE,
+    shell=True,
+    nerf=False,
+    throw=True,
+    verbose=False):
+
+    if nerf:
+        return (None, 'nerfed', 'nerfed')
+    process = Popen(cmd, stdout=stdout, stderr=stderr, shell=shell)  # nosec
+    _stdout, _stderr = [
+        stream.decode('utf-8') if stream is not None else None
+        for stream in process.communicate()
+    ]
+    exitcode = process.poll()
+    if throw and exitcode:
+        raise CalledProcessError(
+            exitcode,
+            f'cmd={cmd}; stdout={_stdout}; stderr={_stderr}',
+            output=_stdout,
+            stderr=_stderr,
+        )
+    return exitcode, _stdout, _stderr
+
+def git(args, strip=True, **kwargs):
+    try:
+        _, stdout, stderr = call('git rev-parse --is-inside-work-tree')
+    except CalledProcessError as ex:
+        if 'not a git repository' in str(ex):
+            raise NotGitRepoError
+        elif 'git: command not found' in str(ex):
+            raise GitCommandNotFoundError
+    try:
+        _, result, _ = call(f'git {args}', **kwargs)
+        if result:
+            result = result.strip()
+        return result
+    except CalledProcessError as ex:
+        raise ex
+
+def utc_offset():
+    utc_offset_sec = time.altzone if time.localtime().tm_isdst else time.timezone
+    return timedelta(seconds=-utc_offset_sec)
+
+def to_timedelta(string):
+    suffix = string[-1]
+    count = int(string[:-1])
+    if suffix == 'y':
+        return relativedelta(years=count)
+    if suffix == 'm':
+        return relativedelta(months=count)
+    if suffix == 'w':
+        return relativedelta(weeks=count)
+    if suffix == 'd':
+        return relativedelta(days=count)
+
+def to_span(string):
+    items = string.split(':')
+    if len(items) > 1:
+        return (to_timedelta(items[0]), to_timedelta(items[1]))
+    if len(items) == 1:
+        return (None, to_timedelta(items[0]))
+    raise ToSpanError(string)
+
+def test_ref(ref, since, until):
+    now = datetime.now().replace(microsecond=0, tzinfo=timezone(offset=utc_offset()))
+    since = now - since
+    until = now - until
+    iso = git(f'show -q --format="%cI" {ref}')
+    date = datetime.fromisoformat(iso)
+    if since and since < date:
+        if until and until > date:
+            print(date, ref)
+
+def main(args):
+    parser = ArgumentParser()
+    parser.add_argument(
+        '-s', '--span',
+        default=to_span('6m'),
+        type=to_span,
+        help='default="%(default)s"; set the span argument in the form of \'1y:6m\'')
+    parser.add_argument(
+        'ref',
+        help='required; ref to check')
+
+    ns = parser.parse_args()
+    test_ref(ns.ref, *ns.span)
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
+
