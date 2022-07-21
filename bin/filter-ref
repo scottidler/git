@@ -130,9 +130,10 @@ def test_ref(ref, show_date, show_author, since, until):
         if until and until > date:
             if show_date:
                 printf('%s ', date)
+            printf('%s ', ref)
             if show_author:
                 printf('%s ', name)
-            print(ref)
+            print()
 
 def main(args):
     parser = ArgumentParser()
