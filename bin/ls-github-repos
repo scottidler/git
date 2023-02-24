@@ -26,12 +26,7 @@ def get_token(token_path, organization):
     except Exception as ex:
         return None
 
-def query(url, token, **params):
-    headers = {}
-    if token:
-        headers = {
-            'Authorization': 'token ' + token,
-        }
+def query(url, headers, **params):
     results = requests.get(url, headers=headers, params=params).json()
     if isinstance(results, dict):
         raise GithubError(**results)
@@ -39,18 +34,25 @@ def query(url, token, **params):
 
 def get_github_repos(token_path, repo_type, organization, archived):
     reponames = []
+    headers = {
+        'X-GitHub-Api-Version': '2022-11-28',
+    }
     token = get_token(token_path, organization)
+    if token:
+        headers.update({
+            'Authorization': 'token ' + token,
+        })
     page = 1
     github = f'https://api.github.com/{repo_type}'
     url = f'{github}/{organization}/repos'
-    repos = query(url, token, page=page)
+    repos = query(url, headers, page=page)
     while repos:
         for repo in repos:
             if archived or not repo['archived']:
                 reponame = repo['full_name']
                 reponames += [reponame]
         page += 1
-        repos = query(url, token, page=page)
+        repos = query(url, headers, page=page)
     return sorted(reponames)
 
 def print_github_repos(reponames):
@@ -89,6 +91,7 @@ if __name__ == '__main__':
         try:
             reponames += get_github_repos(ns.token_path, repo_type, ns.organization, ns.archived)
         except GithubError as ge:
+            print(ge)
             continue
     print_github_repos(sorted(list(set(reponames))))
 
