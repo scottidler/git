@@ -91,7 +91,7 @@ if __name__ == '__main__':
         try:
             reponames += get_github_repos(ns.token_path, repo_type, ns.organization, ns.archived)
         except GithubError as ge:
-            print(ge)
+            print(ge, file=sys.stderr)
             continue
     print_github_repos(sorted(list(set(reponames))))
 
