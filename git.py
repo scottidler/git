@@ -2,20 +2,18 @@
 # -*- coding: utf-8 -*-
 
 import os
-import re
 import sys
+
+from subprocess import Popen, PIPE, CalledProcessError
+from contextlib import contextmanager
 
 sys.dont_write_bytecode = True
 
-from ruamel import yaml
-from pprint import pprint
-from subprocess import Popen, PIPE, CalledProcessError
-from contextlib import contextmanager
-from argparse import ArgumentParser, RawDescriptionHelpFormatter
 
 def expand(path):
     if path:
         return os.path.abspath(os.path.expanduser(path))
+
 
 @contextmanager
 def cd(*args, mkdir=True, verbose=False, **kwargs):
@@ -40,6 +38,7 @@ def cd(*args, mkdir=True, verbose=False, **kwargs):
             if verbose:
                 print('cd '+prev)
 
+
 def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verbose=False):
     if verbose or nerf:
         print(cmd)
@@ -58,8 +57,10 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
         raise CalledProcessError(exitcode, message)
     return exitcode, stdout, stderr
 
+
 def ls_remote(repourl, throw=True, verbose=False):
     return call('git ls-remote ' + repourl, throw=throw, verbose=verbose)
+
 
 def clone(
         remote,

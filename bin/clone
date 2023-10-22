@@ -5,17 +5,16 @@ import os
 import re
 import sys
 import argparse
-import importlib
-
-sys.dont_write_bytecode = True
 
 from importlib.machinery import SourceFileLoader
 from configparser import ConfigParser
-from pprint import pprint
-from subprocess import CalledProcessError
+
+sys.dont_write_bytecode = True
+
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
+
 
 REAL_FILE = os.path.abspath(__file__)
 REAL_NAME = os.path.basename(REAL_FILE)
@@ -32,10 +31,12 @@ CONFIGS = [
 GIT_PY = f'{REAL_PATH}/../git.py'
 git = SourceFileLoader('git', GIT_PY).load_module()
 
+
 class FailedDiscover(Exception):
     def __init__(self, repospec, remotes):
         message = ' '.join([remote + repospec for remote in remotes])
         super(FailedDiscover, self).__init__(message)
+
 
 def load_config(filenames):
     for filename in filenames:
@@ -59,6 +60,7 @@ def load_config(filenames):
             cfg['orgs'] = orgs
             return cfg
 
+
 def discover(repospec, remotes=None, verbose=False):
     pattern = '((git|ssh|https?|rsync)://)(\w+@)?([\w\.]+)(:(\d+))?[:/]{1,2}'
     regex = re.compile(pattern)
@@ -78,6 +80,7 @@ def discover(repospec, remotes=None, verbose=False):
             return remote, repospec
     raise FailedDiscover(repospec, remotes)
 
+
 def divine(reponame, cfg):
     project = os.path.dirname(reponame)
     default = cfg['orgs'].get('default', {})
@@ -86,6 +89,7 @@ def divine(reponame, cfg):
     email = org.get('email', default.get('email', None))
     signingkey = org.get('signingkey', default.get('signingkey', None))
     return name, email, signingkey
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
