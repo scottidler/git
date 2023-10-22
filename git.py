@@ -83,8 +83,8 @@ def clone(
         repopath = os.path.join(repopath, revision)
     with cd(clonepath, mkdir=True):
         if not os.path.isdir(repopath):
-            giturl = '/'.join([remote, reponame])
-            call(f'git clone {mirror} {giturl} {repopath}')
+            sep = '/' if remote.startswith('https') else ':'
+            call(f'git clone {mirror} {remote}{sep}{reponame} {repopath}')
         with cd(repopath):
             call('git clean -xfd')
             call('git checkout '+revision)

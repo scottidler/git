@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 
 import os
-import re
 import sys
 import argparse
 
@@ -55,40 +54,48 @@ def load_config(filenames):
                     orgs[section[len('org.'):]] = {
                         'name': parser[section].get('name', None),
                         'email': parser[section].get('email', None),
-                        'signingkey': parser[section].get('signingkey', None)
+                        'signingkey': parser[section].get('signingkey', None),
+                        'sshkey': parser[section].get('sshkey', None),
+                        'remote_type': parser[section].get('remote_type', 'ssh'),
                     }
             cfg['orgs'] = orgs
             return cfg
 
 
-def discover(repospec, remotes=None, verbose=False):
-    pattern = '((git|ssh|https?|rsync)://)(\w+@)?([\w\.]+)(:(\d+))?[:/]{1,2}'
-    regex = re.compile(pattern)
-    match = regex.match(repospec)
-    if match:
-        remote = match.group(0)
-        reponame = os.path.splitext(repospec[len(remote):])[0]
-        return remote, reponame
-    for remote in remotes:
-        if verbose:
-            print(f'remote = {remote}')
-        repourl = os.path.join(remote, repospec)
-        if verbose:
-            print(f'repourl = {repourl}')
-        exitcode, stdout, stderr = git.ls_remote(repourl, throw=False, verbose=verbose)
-        if 0 == exitcode:
-            return remote, repospec
-    raise FailedDiscover(repospec, remotes)
+#def discover(repospec, cfg, verbose=False):
+#    org_slug, repo_name = repospec.split('/')
+#    remote_type = cfg['orgs'].get(org_slug, {}).get('remote_type', 'ssh')
+#    if remote_type == 'ssh':
+#        remote = 'git@github.com:'
+#    elif remote_type == 'https':
+#        remote = 'https://github.com/'
+#    else:
+#        raise ValueError(f'Invalid remote_type: {remote_type}')
+#    return f'{remote}{org_slug}/{repo_name}.git', f'{org_slug}/{repo_name}'
 
 
-def divine(reponame, cfg):
-    project = os.path.dirname(reponame)
+def discover(repospec, cfg, verbose=False):
+    org_slug, repo_name = repospec.split('/')
+    remote_type = cfg['orgs'].get(org_slug, {}).get('remote_type', 'ssh')
+    if remote_type == 'ssh':
+        remote = "git@github.com"
+    elif remote_type == 'https':
+        remote = "https://github.com"
+    else:
+        raise ValueError(f"Invalid remote_type: {remote_type}")
+
+    return remote, f"{org_slug}/{repo_name}"
+
+
+def divine(reponame, cfg, verbose=False):
+    org_slug = reponame.split('/')[0]
     default = cfg['orgs'].get('default', {})
-    org = cfg['orgs'].get(project, {})
+    org = cfg['orgs'].get(org_slug, {})
     name = org.get('name', default.get('name', None))
     email = org.get('email', default.get('email', None))
     signingkey = org.get('signingkey', default.get('signingkey', None))
-    return name, email, signingkey
+    sshkey = org.get('sshkey', default.get('sshkey', None))
+    return name, email, signingkey, sshkey
 
 
 if __name__ == '__main__':
@@ -133,10 +140,20 @@ if __name__ == '__main__':
     locals().update(ns.__dict__)
     cfg = load_config(configs)
     remotes = cfg.get('remotes', [])
-    remote, reponame = discover(repospec, remotes, verbose)
-    name, email, signingkey = divine(reponame, cfg)
+    remote, reponame = discover(repospec, cfg, verbose)
+    print('remote =', remote)
+    print('reponame =', reponame)
+    name, email, signingkey, sshkey = divine(reponame, cfg, verbose)
+    print(name)
+    print(email)
+    print(signingkey)
+    print(sshkey)
     if verbose:
         print(f'remote = {remote}, reponame = {reponame}')
+    if sshkey:
+        os.environ['GIT_SSH_COMMAND'] = f'ssh -i {sshkey}'
+    else:
+        print('no sshkey')
     print(
         git.clone(
             remote,
