@@ -62,18 +62,6 @@ def load_config(filenames):
             return cfg
 
 
-#def discover(repospec, cfg, verbose=False):
-#    org_slug, repo_name = repospec.split('/')
-#    remote_type = cfg['orgs'].get(org_slug, {}).get('remote_type', 'ssh')
-#    if remote_type == 'ssh':
-#        remote = 'git@github.com:'
-#    elif remote_type == 'https':
-#        remote = 'https://github.com/'
-#    else:
-#        raise ValueError(f'Invalid remote_type: {remote_type}')
-#    return f'{remote}{org_slug}/{repo_name}.git', f'{org_slug}/{repo_name}'
-
-
 def discover(repospec, cfg, verbose=False):
     org_slug, repo_name = repospec.split('/')
     remote_type = cfg['orgs'].get(org_slug, {}).get('remote_type', 'ssh')
@@ -141,13 +129,7 @@ if __name__ == '__main__':
     cfg = load_config(configs)
     remotes = cfg.get('remotes', [])
     remote, reponame = discover(repospec, cfg, verbose)
-    print('remote =', remote)
-    print('reponame =', reponame)
     name, email, signingkey, sshkey = divine(reponame, cfg, verbose)
-    print(name)
-    print(email)
-    print(signingkey)
-    print(sshkey)
     if verbose:
         print(f'remote = {remote}, reponame = {reponame}')
     if sshkey:
