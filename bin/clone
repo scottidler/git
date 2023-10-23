@@ -3,16 +3,14 @@
 
 import os
 import sys
+import logging
 import argparse
 
 from importlib.machinery import SourceFileLoader
 from configparser import ConfigParser
+from logging.handlers import RotatingFileHandler
 
 sys.dont_write_bytecode = True
-
-
-def eprint(*args, **kwargs):
-    print(*args, file=sys.stderr, **kwargs)
 
 
 REAL_FILE = os.path.abspath(__file__)
@@ -28,7 +26,32 @@ CONFIGS = [
     f'{REAL_PATH}/../cfg/clone.cfg',
 ]
 GIT_PY = f'{REAL_PATH}/../git.py'
+DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
+CWD = os.path.abspath(os.getcwd())
+REL = os.path.relpath(DIR, CWD)
+LOG_LEVEL = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO').upper())
+LOG_DEST = os.environ.get('LOG_DEST', os.path.os.path.join(os.path.dirname(REAL_PATH), 'clone.log'))
+
+
 git = SourceFileLoader('git', GIT_PY).load_module()
+
+
+def setup_logging(log_level, log_dest):
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    if log_dest != 'stderr':
+        file_handler = RotatingFileHandler(log_dest, maxBytes=1e6, backupCount=3)
+        file_handler.setFormatter(formatter)
+        root_logger.addHandler(file_handler)
+    else:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(formatter)
+        root_logger.addHandler(stream_handler)
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 class FailedDiscover(Exception):
@@ -38,6 +61,7 @@ class FailedDiscover(Exception):
 
 
 def load_config(filenames):
+    logging.debug(f'load_config: filenames={filenames}')
     for filename in filenames:
         filename = os.path.abspath(os.path.expanduser(filename))
         parser = ConfigParser()
@@ -63,6 +87,7 @@ def load_config(filenames):
 
 
 def discover(repospec, cfg, verbose=False):
+    logging.debug(f'discover: repospec={repospec} cfg={cfg} verbose={verbose}')
     org_slug, repo_name = repospec.split('/')
     remote_type = cfg['orgs'].get(org_slug, {}).get('remote_type', 'ssh')
     if remote_type == 'ssh':
@@ -76,6 +101,7 @@ def discover(repospec, cfg, verbose=False):
 
 
 def divine(reponame, cfg, verbose=False):
+    logging.debug(f'divine: reponame={reponame} cfg={cfg} verbose={verbose}')
     org_slug = reponame.split('/')[0]
     default = cfg['orgs'].get('default', {})
     org = cfg['orgs'].get(org_slug, {})
@@ -86,7 +112,10 @@ def divine(reponame, cfg, verbose=False):
     return name, email, signingkey, sshkey
 
 
-if __name__ == '__main__':
+def main(args):
+    setup_logging(LOG_LEVEL, LOG_DEST)
+    logging.info('*' * 80)
+    logging.info(f'main: args={args}')
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '--configs',
@@ -124,7 +153,7 @@ if __name__ == '__main__':
         nargs='?',
         help='revision')
 
-    ns = parser.parse_args()
+    ns = parser.parse_known_args(args)
     locals().update(ns.__dict__)
     cfg = load_config(configs)
     remotes = cfg.get('remotes', [])
@@ -147,3 +176,7 @@ if __name__ == '__main__':
             email,
             signingkey,
             versioning))
+
+
+if __name__ == '__main__':
+    main(sys.argv[1:])

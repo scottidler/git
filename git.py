@@ -3,6 +3,7 @@
 
 import os
 import sys
+import logging
 
 from subprocess import Popen, PIPE, CalledProcessError
 from contextlib import contextmanager
@@ -39,7 +40,15 @@ def cd(*args, mkdir=True, verbose=False, **kwargs):
                 print('cd '+prev)
 
 
-def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verbose=False):
+def call(
+        cmd,
+        stdout=PIPE,
+        stderr=PIPE,
+        shell=True,
+        nerf=False,
+        throw=True,
+        verbose=False):
+    loggin.debug(f'call: cmd={cmd} stdout={stdout} stderr={stderr} shell={shell} nerf={shell} throw={throw} verbose={verbose}')
     if verbose or nerf:
         print(cmd)
     if nerf:
@@ -59,6 +68,7 @@ def call(cmd, stdout=PIPE, stderr=PIPE, shell=True, nerf=False, throw=True, verb
 
 
 def ls_remote(repourl, throw=True, verbose=False):
+    logging.debug(f'ls_remote: repourl={repourl} throw={throw} verbose={verbose}')
     return call('git ls-remote ' + repourl, throw=throw, verbose=verbose)
 
 
@@ -72,12 +82,13 @@ def clone(
         email=None,
         signingkey=None,
         versioning=False):
+    logging.debug(f'clone: remote={remote} reponame={reponame} revision={revision} clonepath={clonepath} mirrorpath={mirrorpath} name={name} email={email} signingkey={signingkey}')
     clonepath = expand(clonepath)
     mirrorpath = expand(mirrorpath)
     mirror = ''
     if mirrorpath:
         mirror = f'--reference {mirrorpath}/{reponame}.git'
-    path = os.path.join(clonepath, reponame)
+    path = os.path.join(clonepath, reponame) #FIXME: local path assigned by never used
     repopath = reponame
     if versioning:
         repopath = os.path.join(repopath, revision)
