@@ -48,7 +48,7 @@ def call(
         nerf=False,
         throw=True,
         verbose=False):
-    loggin.debug(f'call: cmd={cmd} stdout={stdout} stderr={stderr} shell={shell} nerf={shell} throw={throw} verbose={verbose}')
+    logging.debug(f'call: cmd={cmd} stdout={stdout} stderr={stderr} shell={shell} nerf={shell} throw={throw} verbose={verbose}')
     if verbose or nerf:
         print(cmd)
     if nerf:

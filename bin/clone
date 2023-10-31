@@ -153,13 +153,11 @@ def main(args):
         nargs='?',
         help='revision')
 
-    ns = parser.parse_known_args(args)
-    locals().update(ns.__dict__)
-    cfg = load_config(configs)
-    remotes = cfg.get('remotes', [])
-    remote, reponame = discover(repospec, cfg, verbose)
-    name, email, signingkey, sshkey = divine(reponame, cfg, verbose)
-    if verbose:
+    ns, rem = parser.parse_known_args(args)
+    cfg = load_config(ns.configs)
+    remote, reponame = discover(ns.repospec, cfg, ns.verbose)
+    name, email, signingkey, sshkey = divine(reponame, cfg, ns.verbose)
+    if ns.verbose:
         print(f'remote = {remote}, reponame = {reponame}')
     if sshkey:
         os.environ['GIT_SSH_COMMAND'] = f'ssh -i {sshkey}'
@@ -169,13 +167,13 @@ def main(args):
         git.clone(
             remote,
             reponame,
-            revision,
-            clonepath,
-            mirrorpath,
+            ns.revision,
+            ns.clonepath,
+            ns.mirrorpath,
             name,
             email,
             signingkey,
-            versioning))
+            ns.versioning))
 
 
 if __name__ == '__main__':
