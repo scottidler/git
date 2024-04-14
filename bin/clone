@@ -13,25 +13,11 @@ from logging.handlers import RotatingFileHandler
 sys.dont_write_bytecode = True
 
 
-REAL_FILE = os.path.abspath(__file__)
-REAL_NAME = os.path.basename(REAL_FILE)
-REAL_PATH = os.path.dirname(REAL_FILE)
-if os.path.islink(__file__):
-    LINK_FILE = REAL_FILE; REAL_FILE = os.path.abspath(os.readlink(__file__))
-    LINK_NAME = REAL_NAME; REAL_NAME = os.path.basename(REAL_FILE)
-    LINK_PATH = REAL_PATH; REAL_PATH = os.path.dirname(REAL_FILE)
-
+LOG_LEVEL = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO').upper())
+LOG_DEST = os.environ.get('LOG_DEST', os.path.join('/var/log/clone', 'clone.log'))
 CONFIGS = [
     '~/.config/clone/clone.cfg',
-    f'{REAL_PATH}/../cfg/clone.cfg',
 ]
-
-GIT_PY = f'{REAL_PATH}/../git.py'
-DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
-CWD = os.path.abspath(os.getcwd())
-REL = os.path.relpath(DIR, CWD)
-LOG_LEVEL = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO').upper())
-LOG_DEST = os.environ.get('LOG_DEST', os.path.os.path.join(os.path.dirname(REAL_PATH), 'clone.log'))
 
 def git_py():
     script_path = os.path.realpath(__file__)
