@@ -14,7 +14,7 @@ sys.dont_write_bytecode = True
 
 
 LOG_LEVEL = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO').upper())
-LOG_DEST = os.environ.get('LOG_DEST', os.path.join('/var/log/clone', 'clone.log'))
+LOG_DEST = os.environ.get('LOG_DEST', os.path.join(os.path.expanduser('~/.clone'), 'clone.log'))
 CONFIGS = [
     '~/.config/clone/clone.cfg',
 ]
