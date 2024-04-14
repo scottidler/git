@@ -25,6 +25,7 @@ CONFIGS = [
     '~/.config/clone/clone.cfg',
     f'{REAL_PATH}/../cfg/clone.cfg',
 ]
+
 GIT_PY = f'{REAL_PATH}/../git.py'
 DIR = os.path.abspath(os.path.dirname(os.path.realpath(__file__)))
 CWD = os.path.abspath(os.getcwd())
@@ -32,8 +33,12 @@ REL = os.path.relpath(DIR, CWD)
 LOG_LEVEL = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO').upper())
 LOG_DEST = os.environ.get('LOG_DEST', os.path.os.path.join(os.path.dirname(REAL_PATH), 'clone.log'))
 
+def git_py():
+    script_path = os.path.realpath(__file__)
+    script_dir = os.path.dirname(script_path)
+    return os.path.abspath(os.path.join(script_dir, '../git.py'))
 
-git = SourceFileLoader('git', GIT_PY).load_module()
+git = SourceFileLoader('git', git_py()).load_module()
 
 
 def setup_logging(log_level, log_dest):
