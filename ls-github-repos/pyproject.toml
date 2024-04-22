@@ -1,0 +1,16 @@
+# ls-github-repos/pyproject.toml
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ls-github-repos"
+version = "0.1.0"
+authors = [{name = "Your Name"}]
+dependencies = [
+    "requests>=2.25.1"
+]
+scripts = {
+    "ls-github-repos": "main.py"
+}

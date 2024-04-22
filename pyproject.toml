@@ -1,0 +1,22 @@
+# pyproject.toml
+
+[build-system]
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "common-scripts"
+version = "0.1.0"
+authors = [{name = "Your Name"}]
+dependencies = []
+scripts = {
+    "default-branch": "bin/default-branch.py",
+    "filter-ref": "bin/filter-ref.py",
+    "git-objects": "bin/git-objects.py",
+    "ls-git-repos": "bin/ls-git-repos.py",
+    "remote-origin-url": "bin/remote-origin-url.py",
+    "reponame": "bin/reponame.py",
+    "clone": "common/scripts/clone.py",
+    "clone-lite": "common/scripts/clone-lite.py"
+}
+
