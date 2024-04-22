@@ -9,14 +9,13 @@ name = "common-scripts"
 version = "0.1.0"
 authors = [{name = "Your Name"}]
 dependencies = []
-scripts = {
-    "default-branch": "bin/default-branch.py",
-    "filter-ref": "bin/filter-ref.py",
-    "git-objects": "bin/git-objects.py",
-    "ls-git-repos": "bin/ls-git-repos.py",
-    "remote-origin-url": "bin/remote-origin-url.py",
-    "reponame": "bin/reponame.py",
-    "clone": "common/scripts/clone.py",
-    "clone-lite": "common/scripts/clone-lite.py"
-}
 
+[project.scripts]
+default-branch = "bin.default_branch:main"
+filter-ref = "bin.filter_ref:main"
+git-objects = "bin.git_objects:main"
+ls-git-repos = "bin.ls_git_repos:main"
+remote-origin-url = "bin.remote_origin_url:main"
+reponame = "bin.reponame:main"
+clone = "common.scripts.clone:main"
+clone-lite = "common.scripts.clone_lite:main"

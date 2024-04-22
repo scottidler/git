@@ -8,9 +8,7 @@ build-backend = "setuptools.build_meta"
 name = "ls-github-repos"
 version = "0.1.0"
 authors = [{name = "Your Name"}]
-dependencies = [
-    "requests>=2.25.1"
-]
-scripts = {
-    "ls-github-repos": "main.py"
-}
+dependencies = ["requests>=2.25.1"]
+
+[project.scripts]
+ls-github-repos = "ls_github_repos:main"

@@ -8,9 +8,7 @@ build-backend = "setuptools.build_meta"
 name = "stale-branches"
 version = "0.1.0"
 authors = [{name = "Your Name"}]
-dependencies = [
-    "ruamel.yaml>=0.17.10"
-]
-scripts = {
-    "stale-branches": "main.py"
-}
+dependencies = ["ruamel.yaml>=0.17.10"]
+
+[project.scripts]
+stale-branches = "stale_branches:main"
