@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 DIR="${1:-`pwd`}"
 DIR="$(cd "$(dirname "$DIR")"; pwd)/$(basename "$DIR")"
 find $DIR -name .git -type d -exec dirname {} \; | sed "s|$DIR/||" | sort

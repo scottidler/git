@@ -135,7 +135,7 @@ def test_ref(ref, show_date, show_author, since, until):
                 printf('%s ', name)
             print()
 
-def main(args):
+def main():
     parser = ArgumentParser()
     parser.add_argument(
         '-d', '--show-date',
@@ -158,5 +158,5 @@ def main(args):
     test_ref(ns.ref, ns.show_date, ns.show_author, *ns.span)
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()
 
