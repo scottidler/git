@@ -5,7 +5,9 @@ description = "a smattering of git-related tools"
 authors = ["Scott A. Idler <scott.a.idler@gmail.com>"]
 license = "mit"
 readme = "README.md"
-packages = [{ include = "git_tools" }]
+include = [
+    { path = "bin/*", format = ["sdist", "wheel"] }
+]
 
 [tool.poetry.scripts]
 clone = "git_tools.clone:main"
