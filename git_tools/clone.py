@@ -10,7 +10,7 @@ from importlib.machinery import SourceFileLoader
 from configparser import ConfigParser
 from logging.handlers import RotatingFileHandler
 
-from git_tools.git import clone
+from .git import clone
 
 sys.dont_write_bytecode = True
 
