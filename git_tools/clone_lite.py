@@ -12,7 +12,12 @@ sys.dont_write_bytecode = True
 from importlib.machinery import SourceFileLoader
 from subprocess import CalledProcessError
 
-from git import clone
+def git_py():
+    script_path = os.path.realpath(__file__)
+    script_dir = os.path.dirname(script_path)
+    return os.path.abspath(os.path.join(script_dir, 'git.py'))
+
+git = SourceFileLoader('git', git_py()).load_module()
 
 REAL_FILE = os.path.abspath(__file__)
 REAL_NAME = os.path.basename(REAL_FILE)
@@ -74,7 +79,7 @@ def main():
         print(f'remote = {remote}, reponame = {reponame}')
     if remote:
         print(
-            clone(
+            git.clone(
                 remote,
                 reponame,
                 revision,

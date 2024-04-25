@@ -10,9 +10,14 @@ from importlib.machinery import SourceFileLoader
 from configparser import ConfigParser
 from logging.handlers import RotatingFileHandler
 
-from .git import clone
-
 sys.dont_write_bytecode = True
+
+def git_py():
+    script_path = os.path.realpath(__file__)
+    script_dir = os.path.dirname(script_path)
+    return os.path.abspath(os.path.join(script_dir, 'git.py'))
+
+git = SourceFileLoader('git', git_py()).load_module()
 
 
 LOG_LEVEL = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO').upper())
@@ -149,7 +154,7 @@ def main():
     else:
         print('no sshkey')
     print(
-        clone(
+        git.clone(
             remote,
             reponame,
             ns.revision,
