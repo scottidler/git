@@ -12,12 +12,11 @@ sys.dont_write_bytecode = True
 from importlib.machinery import SourceFileLoader
 from subprocess import CalledProcessError
 
-def git_py():
-    script_path = os.path.realpath(__file__)
-    script_dir = os.path.dirname(script_path)
-    return os.path.abspath(os.path.join(script_dir, 'git.py'))
+# Assuming git.py is in the same directory as clone_lite.py
+script_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, script_dir)
 
-git = SourceFileLoader('git', git_py()).load_module()
+import git
 
 REAL_FILE = os.path.abspath(__file__)
 REAL_NAME = os.path.basename(REAL_FILE)

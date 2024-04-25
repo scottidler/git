@@ -12,13 +12,11 @@ from logging.handlers import RotatingFileHandler
 
 sys.dont_write_bytecode = True
 
-def git_py():
-    script_path = os.path.realpath(__file__)
-    script_dir = os.path.dirname(script_path)
-    return os.path.abspath(os.path.join(script_dir, 'git.py'))
+# Assuming git.py is in the same directory as clone.py
+script_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, script_dir)
 
-git = SourceFileLoader('git', git_py()).load_module()
-
+import git
 
 LOG_LEVEL = logging.getLevelName(os.environ.get('LOG_LEVEL', 'INFO').upper())
 LOG_DEST = os.environ.get('LOG_DEST', os.path.join(os.path.expanduser('~/.clone'), 'clone.log'))
