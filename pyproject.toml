@@ -1,20 +1,10 @@
 [tool.poetry]
-name = "git-tools"
+name = "bin"
 version = "0.1.0"
 description = "a smattering of git-related tools"
 authors = ["Scott A. Idler <scott.a.idler@gmail.com>"]
 license = "mit"
 readme = "README.md"
-include = [
-    { path = "bin/*", format = ["sdist", "wheel"] }
-]
-
-[tool.poetry.scripts]
-clone = "git_tools.clone:main"
-clone-lite ="git_tools.clone_lite:main"
-filter-ref = "git_tools.filter_ref:main"
-ls-github-repos = "git_tools.ls_github_repos:main"
-stale-branches = "git_tools.stale_branches:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
