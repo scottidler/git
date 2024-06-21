@@ -1,3 +1,4 @@
+# git-objects
 #!/usr/bin/env bash
 
 if [ -n "$DEBUG" ]; then

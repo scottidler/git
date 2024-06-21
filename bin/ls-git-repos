@@ -1,3 +1,4 @@
+# ls-git-repos
 #!/usr/bin/env bash
 DIR="${1:-`pwd`}"
 DIR="$(cd "$(dirname "$DIR")"; pwd)/$(basename "$DIR")"
