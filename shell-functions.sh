@@ -6,7 +6,8 @@ if [ -n "$DEBUG" ]; then
 fi
 
 function clone() {
-    if [[ "$@" == *"-h"* ]] || [[ "$@" == *"--help"* ]]; then
+    if [[ "$@" == *"-h"* ]] || [[ "$@" == *"--help"* ]] \
+    || [[ "$@" == *"-v"* ]] || [[ "$@" == *"--version"* ]]; then
         eval ~/bin/clone "$@"
     else
         cd $(~/bin/clone $1)
