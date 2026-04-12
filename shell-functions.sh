@@ -8,17 +8,21 @@ fi
 function clone() {
     if [[ "$@" == *"-h"* ]] || [[ "$@" == *"--help"* ]] \
     || [[ "$@" == *"-v"* ]] || [[ "$@" == *"--version"* ]]; then
-        eval ~/bin/clone "$@"
+        ~/bin/clone "$@"
     else
-        cd $(~/bin/clone $1)
+        local result
+        result=$(~/bin/clone "$@") || return $?
+        cd "$result"
     fi
 }
 
 function clone-lite() {
     if [[ "$@" == *"-h"* ]] || [[ "$@" == *"--help"* ]]; then
-        eval ~/bin/clone-lite "$@"
+        ~/bin/clone-lite "$@"
     else
-        cd $(~/bin/clone-lite $1)
+        local result
+        result=$(~/bin/clone-lite "$@") || return $?
+        cd "$result"
     fi
 }
 
