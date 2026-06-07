@@ -5,17 +5,6 @@ if [ -n "$DEBUG" ]; then
     set -x
 fi
 
-function clone() {
-    if [[ "$@" == *"-h"* ]] || [[ "$@" == *"--help"* ]] \
-    || [[ "$@" == *"-v"* ]] || [[ "$@" == *"--version"* ]]; then
-        ~/bin/clone "$@"
-    else
-        local result
-        result=$(~/bin/clone "$@") || return $?
-        cd "$result"
-    fi
-}
-
 function clone-lite() {
     if [[ "$@" == *"-h"* ]] || [[ "$@" == *"--help"* ]]; then
         ~/bin/clone-lite "$@"
